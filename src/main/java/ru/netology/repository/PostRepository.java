@@ -10,18 +10,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
-public class PostRepository {
+public class PostRepository implements IRepository<Post> {
 
     private ConcurrentHashMap<Long, Post> posts = new ConcurrentHashMap<>();
     private AtomicLong idCounter = new AtomicLong(1);
 
-    public List<Post> all() {
+    @Override
+    public List<Post> getAll() {
         List<Post> validPosts = posts.values().stream()
                 .filter(post -> !post.isRemoved())
                 .toList();
         return new ArrayList<>(validPosts);
     }
 
+    @Override
     public Optional<Post> getById(long id) {
         Post post = posts.get(id);
         if (post == null) {
@@ -31,6 +33,7 @@ public class PostRepository {
         }
     }
 
+    @Override
     public Optional<Post> save(Post post) {
         long postId = post.getId();
         if (postId == 0) {
@@ -48,11 +51,13 @@ public class PostRepository {
         }
     }
 
+    @Override
     public Optional<Post> removeById(long id) {
         Post postToRemove = posts.get(id);
-        if (postToRemove != null) {
-            postToRemove.setRemoved(true);
+        if (postToRemove == null || postToRemove.isRemoved()) {
+            return Optional.empty();
         }
-        return Optional.ofNullable(postToRemove);
+        postToRemove.setRemoved(true);
+        return Optional.of(postToRemove);
     }
 }

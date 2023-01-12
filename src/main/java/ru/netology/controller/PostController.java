@@ -2,39 +2,46 @@ package ru.netology.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.netology.dto.Mapper;
+import ru.netology.dto.PostDTO;
 import ru.netology.model.Post;
-import ru.netology.service.PostService;
+import ru.netology.service.IService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/posts")
-public class PostController {
+public class PostController implements IController<PostDTO, Post> {
 
-    private final PostService service;
+    private final IService<Post> service;
+    private final Mapper mapper;
 
     @Autowired
-    public PostController(PostService service) {
+    public PostController(IService<Post> service, Mapper mapper) {
         this.service = service;
+        this.mapper = mapper;
     }
 
-    @GetMapping
-    public List<Post> all() {
-        return service.all();
+    @Override
+    public List<PostDTO> getAll() {
+        return service.getAll().stream()
+                .map(mapper::mapToPostDTO)
+                .collect(Collectors.toList());
     }
 
-    @GetMapping("/{id}")
-    public Post getById(@PathVariable long id) {
-        return service.getById(id);
+    @Override
+    public PostDTO getById(long id) {
+        return mapper.mapToPostDTO(service.getById(id));
     }
 
-    @PostMapping
-    public Post save(@RequestBody Post post) {
-        return service.save(post);
+    @Override
+    public PostDTO save(Post post) {
+        return mapper.mapToPostDTO(service.save(post));
     }
 
-    @DeleteMapping("/{id}")
-    public void removeById(@PathVariable long id) {
-        service.removeById(id);
+    @Override
+    public String removeById(long id) {
+        return service.removeById(id);
     }
 }
